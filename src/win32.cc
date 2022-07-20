@@ -7,6 +7,11 @@
 #include <SDL.h>
 #include <stdlib.h>
 
+#if defined(__vita__)
+#include <psp2/sysmodule.h>
+#include <psp2/power.h>
+#endif
+
 #ifdef _WIN32
 // 0x51E444
 bool gProgramIsActive = false;
@@ -37,6 +42,14 @@ int main(int argc, char* argv[])
     char* basePath = SDL_GetBasePath();
     chdir(basePath);
     SDL_free(basePath);
+#endif
+
+#if defined(__vita__)
+    chdir("ux0:/data/fallout2/");
+    sceSysmoduleLoadModule(SCE_SYSMODULE_IME);
+    SDL_SetHintWithPriority(SDL_HINT_TOUCH_MOUSE_EVENTS, "0", SDL_HINT_OVERRIDE);
+    scePowerSetArmClockFrequency(444);
+    scePowerSetGpuClockFrequency(222);
 #endif
 
     SDL_ShowCursor(SDL_DISABLE);

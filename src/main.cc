@@ -37,6 +37,8 @@
 #include <limits.h>
 #include <string.h>
 
+int _newlib_heap_size_user   = 200 * 1024 * 1024;
+
 #define MAIN_MENU_WINDOW_WIDTH 640
 #define MAIN_MENU_WINDOW_HEIGHT 480
 

@@ -230,6 +230,8 @@ add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE
     "src/world_map.h"
     "src/xfile.cc"
     "src/xfile.h"
+    "src/vita_ime.cc"
+    "src/vita_ime.h"
 )
 
 target_sources(${EXECUTABLE_NAME} PUBLIC
@@ -255,6 +257,14 @@ else()
         $<$<CONFIG:Debug>:_DEBUG>
         $<$<CONFIG:RelWithDebInfo>:_DEBUG>
     )
+
+    if(VITA)
+        target_compile_definitions(${EXECUTABLE_NAME} PRIVATE _POSIX_C_SOURCE=200809)
+        add_definitions("-Dmemcpy=sceClibMemcpy")
+        add_definitions("-Dmemcmp=sceClibMemcmp")
+        add_definitions("-marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -ftree-vectorize -ffast-math -fsigned-char -fno-optimize-sibling-calls")
+    endif()
+
 endif()
 
 if(WIN32)
@@ -275,7 +285,7 @@ add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} ${FPATTERN_LIBRARY})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${FPATTERN_INCLUDE_DIR})
 
-if(NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND NOT VITA)
     add_subdirectory("third_party/zlib")
     add_subdirectory("third_party/sdl2")
 else()
@@ -286,8 +296,13 @@ endif()
 target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
-target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+if(VITA)
+  target_link_libraries(${EXECUTABLE_NAME} SDL2::SDL2 SceIme_stub)
+  target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+else()
+  target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+  target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+endif()
 
 if(APPLE)
     install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
@@ -309,4 +324,21 @@ if(APPLE)
     set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
 
     include(CPack)
+endif()
+
+if(VITA)
+    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
+
+    set(VITA_APP_NAME "Fallout 2")
+    set(VITA_TITLEID  "FALL00001")
+    set(VITA_VERSION  "01.00")
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")
+
+    vita_create_self(${EXECUTABLE_NAME}.self ${EXECUTABLE_NAME} UNSAFE)
+    vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${EXECUTABLE_NAME}.self
+        VERSION ${VITA_VERSION}
+        NAME ${VITA_APP_NAME}
+        FILE os/psvita/sce_sys sce_sys
+    )
 endif()

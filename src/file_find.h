@@ -51,6 +51,8 @@ static inline bool fileFindIsDirectory(DirectoryFileFindData* findData)
     return (findData->ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #elif defined(__WATCOMC__)
     return (findData->entry->d_attr & _A_SUBDIR) != 0;
+#elif defined(__vita__)
+    return (findData->entry->d_stat.st_attr & 0x0010) != 0;
 #else
     return findData->entry->d_type == DT_DIR;
 #endif

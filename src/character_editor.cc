@@ -33,6 +33,7 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "world_map.h"
+#include "vita_ime.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -3226,6 +3227,10 @@ static int characterEditorEditName()
     }
 
     windowRefresh(win);
+
+#if defined (__vita__)
+    showVitaIme();
+#endif
 
     fontSetCurrent(101);
 

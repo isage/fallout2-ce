@@ -1,4 +1,5 @@
 #include "dinput.h"
+#include "core.h"
 
 #include <SDL.h>
 
@@ -16,6 +17,9 @@ bool directInputInit()
     if (!keyboardDeviceInit()) {
         goto err;
     }
+
+    SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
+    gSdlController = SDL_GameControllerOpen(0);
 
     return true;
 

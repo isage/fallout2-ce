@@ -16,6 +16,10 @@
 
 #include <algorithm>
 
+#if defined(__vita__)
+#include <psp2/kernel/clib.h>
+#endif
+
 #define MAX_WINDOW_COUNT (50)
 
 // The maximum number of radio groups.
@@ -1338,6 +1342,10 @@ int paletteCloseFileImpl(int fd)
 // 0x4D8200
 bool showMesageBox(const char* text)
 {
+#if defined(__vita__)
+    sceClibPrintf(text);
+    return true;
+#else
     SDL_Cursor* prev = SDL_GetCursor();
     SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
     SDL_SetCursor(cursor);
@@ -1347,6 +1355,7 @@ bool showMesageBox(const char* text)
     SDL_SetCursor(prev);
     SDL_FreeCursor(cursor);
     return true;
+#endif
 }
 
 // 0x4D8260

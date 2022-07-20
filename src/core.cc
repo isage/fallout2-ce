@@ -17,6 +17,10 @@
 #include <string.h>
 #include <SDL.h>
 
+#if defined(__vita__)
+#include "vita_ime.h"
+#endif
+
 // NOT USED.
 void (*_idle_func)() = NULL;
 
@@ -360,6 +364,8 @@ SDL_Surface* gSdlSurface = NULL;
 SDL_Renderer* gSdlRenderer = NULL;
 SDL_Texture* gSdlTexture = NULL;
 SDL_Surface* gSdlTextureSurface = NULL;
+
+SDL_GameController* gSdlController = NULL;
 
 // 0x4C8A70
 int coreInit(int a1)
@@ -1244,6 +1250,11 @@ void _GNW95_process_message()
     // is disabled, because if we ignore it, we'll never be able to reactivate
     // it again.
 
+#if defined(__vita__)
+    if (ime_active)
+        sceImeUpdate();
+#endif
+
     KeyboardData keyboardData;
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
@@ -1284,6 +1295,71 @@ void _GNW95_process_message()
             break;
         case SDL_QUIT:
             exit(EXIT_SUCCESS);
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            {
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+                {
+                    keyboardData.key = SDL_SCANCODE_ESCAPE;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A)
+                {
+                    keyboardData.key = SDL_SCANCODE_C;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B)
+                {
+                    keyboardData.key = SDL_SCANCODE_SPACE;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_X)
+                {
+                    keyboardData.key = SDL_SCANCODE_S;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_Y)
+                {
+                    keyboardData.key = SDL_SCANCODE_I;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_UP)
+                {
+                    keyboardData.key = SDL_SCANCODE_P;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_LEFT)
+                {
+                    keyboardData.key = SDL_SCANCODE_B;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
+                {
+                    keyboardData.key = SDL_SCANCODE_N;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+                {
+                    keyboardData.key = SDL_SCANCODE_TAB;
+                    keyboardData.down = (e.cbutton.state & SDL_PRESSED) != 0;
+                    _GNW95_process_key(&keyboardData);
+                }
+#if defined(__vita__)
+                if (e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK && !ime_active)
+                {
+                    showVitaIme();
+                }
+#endif
+            }
             break;
         }
     }
@@ -1639,6 +1715,16 @@ void _mouse_info()
         y = 0;
     }
 
+    int tmpx = SDL_GameControllerGetAxis(gSdlController, SDL_CONTROLLER_AXIS_RIGHTX) / 3200;
+    int tmpy = SDL_GameControllerGetAxis(gSdlController, SDL_CONTROLLER_AXIS_RIGHTY) / 3200;
+    if (tmpx > 2000 || tmpx < 2000) x += tmpx;
+    if (tmpy > 2000 || tmpy < 2000) y += tmpy;
+
+    if (SDL_GameControllerGetButton(gSdlController, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
+        buttons |= MOUSE_STATE_LEFT_BUTTON_DOWN;
+    if (SDL_GameControllerGetButton(gSdlController, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+        buttons |= MOUSE_STATE_RIGHT_BUTTON_DOWN;
+
     // Adjust for mouse senstivity.
     x = (int)(x * gMouseSensitivity);
     y = (int)(y * gMouseSensitivity);
@@ -1907,7 +1993,11 @@ int _init_mode_640_480_16()
 // 0x4CAD64
 int _init_mode_640_480()
 {
+#if defined(__vita__)
+    return _init_vesa_mode(854, 480); // and let sdl upscale it a little
+#else
     return _init_vesa_mode(640, 480);
+#endif
 }
 
 // 0x4CAD94
@@ -2015,13 +2105,18 @@ int _init_vesa_mode(int width, int height)
 int _GNW95_init_window(int width, int height, bool fullscreen)
 {
     if (gSdlWindow == NULL) {
+#if !defined(__vita__)
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-
+#endif
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             return -1;
         }
 
+#if defined(__vita__)
+        Uint32 windowFlags;
+#else
         Uint32 windowFlags = SDL_WINDOW_OPENGL;
+#endif
 
         if (fullscreen) {
             windowFlags |= SDL_WINDOW_FULLSCREEN;

@@ -364,6 +364,12 @@ SDL_Surface* gSdlWindowSurface = NULL;
 SDL_Surface* gSdlSurface = NULL;
 
 SDL_GameController* gSdlController = NULL;
+bool fingerDown = false;
+int fingerX = 480;
+int fingerY = 272;
+
+int fingerDX = 0;
+int fingerDY = 0;
 
 // 0x4C8A70
 int coreInit(int a1)
@@ -1295,6 +1301,22 @@ void _GNW95_process_message()
         case SDL_QUIT:
             exit(EXIT_SUCCESS);
             break;
+        case SDL_FINGERDOWN:
+            if (e.tfinger.touchId == 0)
+            {
+                fingerDown = true;
+                fingerDX = (e.tfinger.x * 960) - fingerX;
+                fingerDY = (e.tfinger.y * 540) - fingerY;
+                fingerX = (e.tfinger.x * 960);
+                fingerY = (e.tfinger.y * 540);
+            }
+            break;
+        case SDL_FINGERUP:
+            if (e.tfinger.touchId == 0)
+            {
+                fingerDown = false;
+            }
+            break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
             {
@@ -1727,6 +1749,14 @@ void _mouse_info()
     // Adjust for mouse senstivity.
     x = (int)(x * gMouseSensitivity);
     y = (int)(y * gMouseSensitivity);
+
+    if (fingerDown)
+    {
+        x = fingerDX;
+        y = fingerDY;
+        buttons |= MOUSE_STATE_LEFT_BUTTON_DOWN;
+        fingerDown = false;
+    }
 
     if (_vcr_state == 1) {
         if (((_vcr_terminate_flags & 4) && buttons) || ((_vcr_terminate_flags & 2) && (x || y))) {

@@ -30,6 +30,10 @@
 // Eventually I've decided to go with compiler-specific implementation, keeping
 // original implementation for Watcom (not tested). I'm not sure it will work
 // in other compilers, so for now just stick with the error.
+#if defined(__vita__)
+#include <psp2/io/stat.h>
+#endif
+
 typedef struct DirectoryFileFindData {
 #if defined(_WIN32)
     HANDLE hFind;
@@ -52,8 +56,10 @@ static inline bool fileFindIsDirectory(DirectoryFileFindData* findData)
 #elif defined(__WATCOMC__)
     return (findData->entry->d_attr & _A_SUBDIR) != 0;
 #elif defined(__vita__)
-    return (findData->entry->d_stat.st_attr & 0x0010) != 0;
+    printf("checking %s = %d\n", findData->entry->d_name, ((findData->entry->d_stat.st_attr & 0x0010) != 0));
+    return SCE_S_ISDIR(findData->entry->d_stat.st_mode);
 #else
+    printf("checking %s = %d\n", findData->entry->d_name, (findData->entry->d_type == DT_DIR));
     return findData->entry->d_type == DT_DIR;
 #endif
 }

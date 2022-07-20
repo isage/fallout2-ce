@@ -1,8 +1,14 @@
-# Fallout 2 Community Edition
+# Fallout 2 Community Edition - PSVita port.
 
 ## Installation
 
 You must own the game to play. Purchase your copy on [GOG](https://www.gog.com/game/fallout_2) or [Steam](https://store.steampowered.com/app/38410). Download latest release or build from source.
+
+### PSVita
+* Download and install fallout2-ce.vpk
+* Copy master.dat, critter.dat, patch000.dat, data and sound folders from your PC game into `ux0:/data/fallout2/`
+#### PSVita controls
+![Controls](/os/psvita/sce_sys/manual/001.png)
 
 ### Windows
 

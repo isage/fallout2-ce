@@ -2407,8 +2407,6 @@ static int _SlotMap2Game(File* stream)
             sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, v11);
             sprintf(_str1, "%s\\%s\\%s", _patches, "MAPS", v11);
 
-            printf("_gzdecompress_file %s to %s\n", _str0, _str1);
-            
 //            if (_gzdecompress_file(_str0, _str1) == -1) {
             if (fileCopyDecompressed(_str0, _str1) == -1) {
                 debugPrint("LOADSAVE: returning 7\n");
@@ -2420,7 +2418,7 @@ static int _SlotMap2Game(File* stream)
     const char* v9 = _strmfe(_str1, "AUTOMAP.DB", "SAV");
     sprintf(_str0, "%s\\%s\\%s%.2d\\%s", _patches, "SAVEGAME", "SLOT", _slot_cursor + 1, v9);
     sprintf(_str1, "%s\\%s\\%s", _patches, "MAPS", "AUTOMAP.DB");
-    printf("fileCopyDecompressed %s to %s\n", _str0, _str1);
+
     if (fileCopyDecompressed(_str0, _str1) == -1) {
         debugPrint("LOADSAVE: returning 8\n");
         return -1;
@@ -2472,7 +2470,6 @@ static int _mygets(char* dest, File* stream)
 // 0x47FE58
 static int _copy_file(const char* a1, const char* a2)
 {
-    printf("copy file %s to %s\n", a1, a2);
     File* stream1;
     File* stream2;
     int length;

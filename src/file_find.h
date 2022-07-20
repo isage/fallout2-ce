@@ -56,10 +56,8 @@ static inline bool fileFindIsDirectory(DirectoryFileFindData* findData)
 #elif defined(__WATCOMC__)
     return (findData->entry->d_attr & _A_SUBDIR) != 0;
 #elif defined(__vita__)
-    printf("checking %s = %d\n", findData->entry->d_name, ((findData->entry->d_stat.st_attr & 0x0010) != 0));
     return SCE_S_ISDIR(findData->entry->d_stat.st_mode);
 #else
-    printf("checking %s = %d\n", findData->entry->d_name, (findData->entry->d_type == DT_DIR));
     return findData->entry->d_type == DT_DIR;
 #endif
 }
